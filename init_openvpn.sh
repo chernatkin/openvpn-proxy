@@ -49,7 +49,10 @@ echo 1 >> /proc/sys/net/ipv4/conf/all/forwarding
 sudo iptables -t filter -A INPUT -p tcp --dport 22 -j ACCEPT
 sudo iptables -t filter -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
 sudo iptables -t filter -A INPUT -p tcp --dport 1194 -j ACCEPT
+sudo iptables -t filter -A INPUT -i lo -j ACCEPT
+sudo iptables -t filter -A INPUT -p udp -j ACCEPT
 sudo iptables -t filter -P INPUT DROP
+
 
 sudo iptables -t filter -A FORWARD -s 10.8.0.0/24 -j ACCEPT
 sudo iptables -t filter -A FORWARD -d 10.8.0.0/24 -m state --state ESTABLISHED,RELATED -j ACCEPT
