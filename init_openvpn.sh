@@ -41,16 +41,20 @@ sudo openvpn --config /etc/openvpn/server.conf
 ping 10.8.0.1
 traceroute google.com
 
-На сервере открываем файл /etc/sysctl.conf и раскомментируем в нем строчку:
+На сервере открываем файл /etc/sysctl.conf и раскомментируем в нем строчки:
 net.ipv4.ip_forward=1
+net.ipv6.conf.all.forwarding=1
+net.ipv6.conf.ens3.accept_ra=2
 Чтобы не пришлось перезагружаться, говорим:
 echo 1 >> /proc/sys/net/ipv4/conf/all/forwarding
 
-sudo iptables -t filter -A INPUT -p tcp --dport 22 -j ACCEPT
-sudo iptables -t filter -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
-sudo iptables -t filter -A INPUT -p tcp --dport 1194 -j ACCEPT
+sudo iptables -t filter -A INPUT -i ens3 -p tcp --dport 22 -j ACCEPT
+sudo iptables -t filter -A INPUT -i ens3 -p tcp --dport 1194 -j ACCEPT
+sudo iptables -t filter -A INPUT -i ens3 -p tcp -m state --state RELATED,ESTABLISHED -j ACCEPT
+sudo iptables -t filter -A INPUT -i ens3 -p icmp --icmp-type echo-request -j ACCEPT
+sudo iptables -t filter -A INPUT -i ens3 -p icmp --icmp-type echo-reply -j ACCEPT
+sudo iptables -t filter -A INPUT -i ens3 -p udp -j ACCEPT
 sudo iptables -t filter -A INPUT -i lo -j ACCEPT
-sudo iptables -t filter -A INPUT -p udp -j ACCEPT
 sudo iptables -t filter -P INPUT DROP
 
 
@@ -60,12 +64,21 @@ sudo iptables -t filter -P FORWARD DROP
 
 sudo iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -j SNAT --to-source <server_ip>
 
-#sudo iptables-save > /etc/iptables.rules
-#sudo cp iptablesload /etc/network/if-pre-up.d/
-#sudo chmod +x /etc/network/if-pre-up.d/iptablesload
+
+# ipv6
+sudo ip6tables -t filter -A INPUT -i ens3 -p tcp --dport 22 -j ACCEPT
+sudo ip6tables -t filter -A INPUT -i ens3 -p tcp --dport 1194 -j ACCEPT
+sudo ip6tables -t filter -A INPUT -i ens3 -p tcp -m state --state RELATED,ESTABLISHED -j ACCEPT
+sudo ip6tables -t filter -A INPUT -i ens3 -p icmpv6 -j ACCEPT
+sudo ip6tables -t filter -A INPUT -i ens3 -p udp -j ACCEPT
+sudo ip6tables -t filter -A INPUT -i lo -j ACCEPT
+sudo ip6tables -t filter -P INPUT DROP
+
+sudo ip6tables -t filter -P FORWARD DROP
 
 sudo apt-get install iptables-persistent
 sudo iptables-save > /etc/iptables/rules.v4
+sudo ip6tables-save > /etc/iptables/rules.v6
 
 
 
