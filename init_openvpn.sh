@@ -74,7 +74,12 @@ sudo ip6tables -t filter -A INPUT -i ens3 -p udp -j ACCEPT
 sudo ip6tables -t filter -A INPUT -i lo -j ACCEPT
 sudo ip6tables -t filter -P INPUT DROP
 
+
+sudo ip6tables -t filter -A FORWARD -s fd00:8798:1231:2304:4567:89ab:34ff:0000/112 -j ACCEPT
+sudo ip6tables -t filter -A FORWARD -d fd00:8798:1231:2304:4567:89ab:34ff:0000/112 -m state --state ESTABLISHED,RELATED -j ACCEPT
 sudo ip6tables -t filter -P FORWARD DROP
+
+sudo ip6tables -t nat -A POSTROUTING -s fd00:8798:1231:2304:4567:89ab:34ff:0000/112 -j SNAT --to-source <server_ipv6>
 
 sudo apt-get install iptables-persistent
 sudo iptables-save > /etc/iptables/rules.v4
